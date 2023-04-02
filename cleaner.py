@@ -1,6 +1,6 @@
 import pandas as pd
 
-""" enlever les lignes vraiment inutiles
+""" remove really useless attributes
 df = pd.read_stata("dataset.dta")
 
 df.drop(
@@ -86,16 +86,24 @@ print(df_elague.columns)
 print(df_elague.head())
 
 
-def is_convertible_to_number(s):
+def isInt(s):
     try:
         int(s)
         return True
     except ValueError:
-        try:
-            float(s)
-            return True
-        except ValueError:
-            return False
+        return False
+
+
+def isFloat(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+def isempty(s):
+    return s == ""
 
 
 def isalphanum(string):
@@ -174,37 +182,88 @@ def isalphanum(string):
 
 def clean(dataframe):
     to_del = []
+    f = "[SUCCESS] Cleaning columns "
 
     for index, line in dataframe.iterrows():
-        if not (isalphanum(line["link"])):
-            # test de type colonne "link"
+        if not (isalphanum(line["link"])) or isempty(line["link"]):
+            # type tests on column "link"
             print("[ERROR] Line {}. Not alphanum {}".format(str(index), line["link"]))
-            r = input("Delete the entry? [Y/n] ")
+            r = input("Delete the entry? Press R to replace [Y/R/n] ")
             if r == "Y":
                 to_del.append(index)
-        elif not (is_convertible_to_number(line["nb_likes"])):
-            # test de type colonne "nb_likes"
-            print(
-                "[ERROR] Line {}. Can't convert {} to type int or float".format(
-                    str(index), line["nb_likes"]
-                )
-            )
-            r = input("Delete the entry? [Y/n] ")
-            if r == "Y":
-                to_del.append(index)
+            elif r == "R":
+                v = input("Enter the value to modify ")
+                dataframe.at[index, col] = v
         else:
-            print("[SUCCESS] Number of likes is Integer: {}".format(line["nb_likes"]))
+            for col in [
+                "nb_likes",
+                "nb_comments",
+                "insta_id",
+                "commentstype",
+                "id_day",
+                "recom",
+                "sum_recom",
+                "fil",
+                "sum_fil",
+            ]:
+                # type tests on int columns
+                if (
+                    not (isInt(line[col]))
+                    or not (isFloat(line[col]))
+                    or isempty(line[col])
+                ):
+                    print(
+                        "[ERROR] Line {} for {}. {} is not of type int".format(
+                            str(index), col, line[col]
+                        )
+                    )
+                    print(type(line[col]))
+                    r = input("Delete the entry? Press R to replace [Y/R/n] ")
+                    if r == "Y":
+                        to_del.append(index)
+                    elif r == "R":
+                        v = input("Enter the value to modify ")
+                        dataframe.at[index, col] = v
+                else:
+                    dataframe.at[index, col] = int(line[col])
+            for col in ["private_acc", "verified_acc"]:
+                # type tests for boolean columns
+                if not (
+                    line[col] == "True"
+                    or line[col] == "False"
+                    or line[col]
+                    or not line[col]
+                ):
+                    print(
+                        "[ERROR] Line {} for {}. {} is not of type bool".format(
+                            str(index), col, line[col]
+                        )
+                    )
+                    print(type(line[col]))
+                    r = input("Delete the entry? Press R to replace [Y/R/n] ")
+                    if r == "Y":
+                        to_del.append(index)
+                    elif r == "R":
+                        v = input("Enter the value to modify ")
+                        dataframe.at[index, col] = v
+                else:
+                    dataframe.at[index, col] = bool(line[col])
 
+        print("[SUCCESS] Line {} is correctly formatted".format(index))
+
+    to_del = list(set(to_del))
     for i in to_del:
-        print("Deleting row ".format(i))
+        print("Deleting row {}".format(i))
     dataframe.drop(to_del, inplace=True)
-    print("[SUCCESS] Cleaning column LINK")
+    print(f)
 
     # test colonnes numériques
     to_del = []
 
 
-# clean(df_elague)
+clean(df_elague)
+
+df_elague.to_csv("cleaned.csv", index=False)
 """
 caption_et_comment = df_elague.drop(
     [
