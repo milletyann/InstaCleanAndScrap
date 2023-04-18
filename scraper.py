@@ -2,6 +2,12 @@ import instaloader
 import csv
 import pandas as pd
 from os.path import exists
+import random as rd
+import time
+from selenium import webdriver
+
+SCRAP_FINISHED = False
+BATCH_SIZE = 50
 
 
 def download_instagram_post(shortcode):
@@ -16,10 +22,9 @@ def download_instagram_post(shortcode):
     L.download_post(post, target=target)
 
 
-def scrap(links, batch_size=100):
-    for i in range(batch_size):
-        download_instagram_post(links[0])
-        links.remove(links[0])
+def sleep_time(x, a, b):
+    # [a, b] is an interval of second for the
+    return x * (b - 1) + a
 
 
 """ pour fabriquer le csv des liens pas encore scrapés
@@ -36,12 +41,10 @@ shortcodes.to_csv("still_to_scrap.csv", index=False)
 
 shortcodes = pd.read_csv(("still_to_scrap.csv"))
 shortcodes = shortcodes["link"].tolist()
-print(shortcodes[:10])
 
 i = 0
 for link in shortcodes:
     path = "media/" + str(link)
-    print(path)
     if exists(path):
         i += 1
         print("on l'a déjà scrap donc ça dégage, c'est le {}ème".format(i))
@@ -53,22 +56,40 @@ for link in shortcodes:
 shortcodes = pd.DataFrame({"link": shortcodes})
 # save it to csv
 shortcodes.to_csv("still_to_scrap.csv", index=False)
-"""
+# """
 
 # read csv
 shortcodes = pd.read_csv("still_to_scrap.csv")
 # convert to list
 shortcodes = shortcodes["link"].tolist()
 
-try:
-    # scrap a batch of posts in shortcodes
-    scrap(shortcodes, batch_size=50)
-except:
-    # update the csv not to scrap again the beginning of the batch again
-    shortcodes = pd.DataFrame({"link": shortcodes})
-    shortcodes.to_csv("still_to_scrap.csv")
+# while not SCRAP_FINISHED:
+#     try:
+#         # scrap a batch of posts in shortcodes
+#         for i in range(BATCH_SIZE):
+#             time_to_wait = sleep_time(rd.random(), 1, 1)
+#             download_instagram_post(shortcodes[0])
+#             links.remove(shortcodes[0])
+#             sleep(time_to_wait)
+#         # convert to dataframe
+#         shortcodes = pd.DataFrame(shortcodes, columns=["link"])
+#         # save to csv
+#         shortcodes.to_csv("still_to_scrap.csv")
+#         SCRAP_FINISHED = True
+#     except:
+#         print("merde ça plante")
+#         # update the csv not to scrap again the beginning of the batch again
+#         shortcodes = pd.DataFrame(shortcodes, columns=["link"])
+#         shortcodes.to_csv("still_to_scrap.csv")
 
-# convert to dataframe
-shortcodes = pd.DataFrame({"link": shortcodes})
-# save to csv
-shortcodes.to_csv("still_to_scrap.csv")
+#     if not SCRAP_FINISHED:
+#         r = input("Scrap not finished, want to continue? [Y/n] ")
+#     if r != "Y":
+#         break
+
+
+# setup the driver
+driver = webdriver.Chrome()
+
+# test shortcode
+shortcode = "BvDpDh6lFjH"

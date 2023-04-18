@@ -1,5 +1,8 @@
 import pandas as pd
 
+##############################################
+#           REMOVE USELESS COLUMNS           #
+##############################################
 """ remove really useless attributes
 df = pd.read_stata("dataset.dta")
 
@@ -79,11 +82,7 @@ df.drop(
 df.to_csv("db_posts_elague.csv", index=False)
 """
 
-### ne garder que les légendes et les commentaires
 df_elague = pd.read_csv("db_posts_elague.csv")
-
-print(df_elague.columns)
-print(df_elague.head())
 
 
 def isInt(s):
@@ -180,9 +179,8 @@ def isalphanum(string):
     return True
 
 
-def clean(dataframe):
+def clean(dataframe, output):
     to_del = []
-    f = "[SUCCESS] Cleaning columns "
 
     for index, line in dataframe.iterrows():
         if not (isalphanum(line["link"])) or isempty(line["link"]):
@@ -226,6 +224,7 @@ def clean(dataframe):
                         dataframe.at[index, col] = v
                 else:
                     dataframe.at[index, col] = int(line[col])
+
             for col in ["private_acc", "verified_acc"]:
                 # type tests for boolean columns
                 if not (
@@ -255,15 +254,14 @@ def clean(dataframe):
     for i in to_del:
         print("Deleting row {}".format(i))
     dataframe.drop(to_del, inplace=True)
-    print(f)
+    print("[SUCCESS] All rows cleaned")
+    print('Saving dataset to "{}"'.format(output))
+    df_elague.to_csv(output, index=False)
 
-    # test colonnes numériques
-    to_del = []
+
+clean(df_elague, "cleaned.csv")
 
 
-clean(df_elague)
-
-df_elague.to_csv("cleaned.csv", index=False)
 """
 caption_et_comment = df_elague.drop(
     [
