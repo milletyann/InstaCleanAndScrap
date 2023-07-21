@@ -4,3 +4,6 @@ This program performs type tests on several attributes of the dataset, including
 - alphanumeric (and "-" and "_") tests
 
 This repo contains some functions to extract specialized features of the dataset.
+
+Note that these functions have been written in a hurry an are sometimes not really clear, however 
+it works and it made what I expected it to do.
